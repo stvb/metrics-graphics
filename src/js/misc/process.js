@@ -59,7 +59,7 @@ function raw_data_transformation(args) {
         args.y_accessor = 'multiline_y_accessor';
     }
 
-    // if user supplies keyword in args.color, change to arg.colors. 
+    // if user supplies keyword in args.color, change to arg.colors.
     // this is so that the API remains fairly sensible and legible.
     if (args.color !== undefined) {
         args.colors = args.color;
@@ -247,7 +247,7 @@ function process_histogram(args) {
             }
         }
     }
-    
+
     // capture the original data and accessors before replacing args.data
     if (!args.processed) {
         args.processed = {};
@@ -264,6 +264,75 @@ function process_histogram(args) {
 }
 
 MG.process_histogram = process_histogram;
+
+
+function process_heatmap(args) {
+    'use strict';
+    // if args.binned=False, then we need to bin the data appropriately.
+    // if args.binned=True, then we need to make sure to compute the relevant computed data.
+    // the outcome of either of these should be something in args.computed_data.
+    // the heatmap plotting function will be looking there for the data to plot.
+
+    // we need to compute an array of objects.
+    // each object has an x, y, dx, dy and z.
+
+    // heatmap data is always single dimension (no multi-series)
+    var our_data = args.data[0];
+
+    args.processed_data = our_data.map(function (d) {
+        return {'x': d[args.x_accessor], 'y': d[args.y_accessor], 'z': d[args.z_accessor]};
+    });
+
+    var this_pt;
+
+    // we still need to compute the dx & dy components for each data point
+    for (var i = 0; i < args.processed_data.length; i++) {
+        this_pt = args.processed_data[i];
+        if (i===0) {
+            this_pt.dx = Infinity;
+            this_pt.dy = Infinity;
+        } else  {
+            this_pt.dx = args.processed_data[i - 1].dx;
+            this_pt.dy = args.processed_data[i - 1].dy;
+        }
+        for (var j = i+1 ; j<args.processed_data.length; j++) {
+            if (args.processed_data[j].x>this_pt.x) {
+                var candidate = args.processed_data[j].x - this_pt.x;
+                this_pt.dx = candidate < this_pt.dx ? candidate : this_pt.dx;
+            }
+            if (args.processed_data[j].y > this_pt.y) {
+                var candidate= args.processed_data[j].y - this_pt.y;
+                this_pt.dy = candidate<this_pt.dy ? candidate: this_pt.dy ;
+            }
+        }
+        this_pt = args.processed_data[0];
+        args.min_x = this_pt.x;
+        args.min_y = this_pt.y;
+        args.processed.min_x = this_pt.x;
+        args.processed.min_y = this_pt.y;
+        this_pt= args.processed_data[args.processed_data.length - 1];
+        args.max_x= this_pt.x+ this_pt.dx;
+        args.max_y= this_pt.y+ this_pt.dy;
+        args.processed.max_x = this_pt.x + this_pt.dx;
+        args.processed.max_y = this_pt.y + this_pt.dy;
+    }
+
+    // capture the original data and accessors before replacing args.data
+    if (!args.processed) {
+        args.processed = {};
+    }
+    args.processed.original_data = args.data;
+    args.processed.original_x_accessor = args.x_accessor;
+    args.processed.original_y_accessor = args.y_accessor;
+
+    args.data = [args.processed_data];
+    args.x_accessor = args.processed_x_accessor;
+    args.y_accessor = args.processed_y_accessor;
+
+    return this;
+}
+
+MG.process_heatmap= process_heatmap;
 
 function process_categorical_variables(args) {
     // For use with bar charts, etc.

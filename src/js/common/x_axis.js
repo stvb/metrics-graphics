@@ -40,7 +40,7 @@ MG.x_rug = x_rug;
 
 function x_axis(args) {
     'use strict';
-    
+
     var svg = mg_get_svg_child_of(args.target);
     var g;
     var min_x;
@@ -525,6 +525,10 @@ function mg_find_min_max_x(args) {
             ];
             return Math.max.apply(null, trio);
         });
+    } else {
+        //needed for heatmap (min and max already calculated) + good default behaviour
+        min_x=args.min_x;
+        max_x=args.max_x;
     }
 
     //if data set is of length 1, expand the range so that we can build the x-axis
@@ -581,11 +585,11 @@ function mg_select_xax_format(args) {
         if (args.xax_format) {
             args.processed.xax_format = args.xax_format;
         } else {
-          if (c === 'line' || c === 'point' || c === 'histogram') {
+          if (c === 'line' || c === 'point' || c === 'histogram' || c === 'heatmap') {
               args.processed.xax_format = mg_default_xax_format(args);
           } else if (c === 'bar') {
               args.processed.xax_format = mg_default_bar_xax_format(args);
-          } 
+          }
         }
     }
 }
