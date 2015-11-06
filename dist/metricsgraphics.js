@@ -998,7 +998,7 @@ function y_axis(args) {
         }
 
         //get min/max in one pass, consider baselines to be part of data
-        if (a.length > 0) { 
+        if (a.length > 0) {
             if (args.baselines) {
                 a = a.concat(args.baselines);
             }
@@ -1086,6 +1086,7 @@ function y_axis(args) {
             .domain([min_y, max_y])
             .range([mg_get_plot_bottom(args), args.top]);
     }
+    args.scales.Y_num = args.scales.Y;
 
     //used for ticks and such, and designed to be paired with log or linear
     args.scales.Y_axis = d3.scale.linear()
@@ -1254,10 +1255,18 @@ function y_axis(args) {
 MG.y_axis = y_axis;
 
 function y_axis_categorical(args) {
+    //for backwards compatibility...
+    var label_source = args.categorical_variables;
+    if (args.y_categorical) label_source = args.label_set_Y;
+
     // first, come up with y_axis
     args.scales.Y = d3.scale.ordinal()
-        .domain(args.categorical_variables)
+        .domain(label_source)
         .rangeRoundBands([mg_get_plot_bottom(args), args.top], args.padding_percentage, args.outer_padding_percentage);
+
+    args.scales.Y_num = d3.scale.linear()
+        .domain([0, label_source.length])
+        .range([mg_get_plot_bottom(args)-10, args.top]);
 
     args.scalefns.yf = function(di) {
         return args.scales.Y(di[args.y_accessor]);
@@ -1275,7 +1284,8 @@ function y_axis_categorical(args) {
         return this;
     }
 
-    var labels = g.selectAll('text').data(args.categorical_variables).enter().append('svg:text')
+
+    var labels = g.selectAll('text').data(label_source).enter().append('svg:text')
         .attr('x', args.left)
         .attr('y', function(d) {
             return args.scales.Y(d) + args.scales.Y.rangeBand() / 2
@@ -1342,7 +1352,7 @@ MG.x_rug = x_rug;
 
 function x_axis(args) {
     'use strict';
-    
+
     var svg = mg_get_svg_child_of(args.target);
     var g;
     var min_x;
@@ -1381,6 +1391,8 @@ function x_axis(args) {
         .domain([args.processed.min_x, args.processed.max_x])
         .range([mg_get_plot_left(args), mg_get_plot_right(args) - args.additional_buffer]);
 
+    args.scales.X_num= args.scales.X;
+
     //remove the old x-axis, add new one
     svg.selectAll('.mg-x-axis').remove();
 
@@ -1412,6 +1424,9 @@ function x_axis(args) {
 MG.x_axis = x_axis;
 
 function x_axis_categorical(args) {
+    var label_source = args.categorical_variables;
+    if (args.y_categorical) label_source = args.label_set_Y;
+
     var svg = mg_get_svg_child_of(args.target);
 
     var svg_width = args.width,
@@ -1422,8 +1437,12 @@ function x_axis_categorical(args) {
     }
 
     args.scales.X = d3.scale.ordinal()
-        .domain(args.categorical_variables.reverse())
+        .domain(label_source)
         .rangeRoundBands([args.left, mg_get_plot_right(args) - additional_buffer]);
+
+    args.scales.X_num = d3.scale.linear()
+        .domain([0, label_source.length])
+        .range([mg_get_plot_left(args), mg_get_plot_right(args) - additional_buffer]);
 
     args.scalefns.xf = function(di) {
         return args.scales.X(di[args.x_accessor]);
@@ -1439,7 +1458,7 @@ function x_axis_categorical(args) {
         return this;
     }
 
-    var labels = g.selectAll('text').data(args.categorical_variables).enter().append('svg:text');
+    var labels = g.selectAll('text').data(label_source).enter().append('svg:text');
 
     labels.attr('x', function(d) {
             return args.scales.X(d) + args.scales.X.rangeBand() / 2
@@ -1827,6 +1846,10 @@ function mg_find_min_max_x(args) {
             ];
             return Math.max.apply(null, trio);
         });
+    } else {
+        //needed for heatmap (min and max already calculated) + good default behaviour
+        min_x=args.min_x;
+        max_x=args.max_x;
     }
 
     //if data set is of length 1, expand the range so that we can build the x-axis
@@ -1883,11 +1906,11 @@ function mg_select_xax_format(args) {
         if (args.xax_format) {
             args.processed.xax_format = args.xax_format;
         } else {
-          if (c === 'line' || c === 'point' || c === 'histogram') {
+          if (c === 'line' || c === 'point' || c === 'histogram' || c === 'heatmap') {
               args.processed.xax_format = mg_default_xax_format(args);
           } else if (c === 'bar') {
               args.processed.xax_format = mg_default_bar_xax_format(args);
-          } 
+          }
         }
     }
 }
@@ -4688,7 +4711,8 @@ MG.data_table = function(args) {
         mg_make_fake_data(args);
         mg_missing_x_scale(args);
         mg_missing_y_scale(args);
-        var g = mg_add_g(svg, 'mg-missing-point');
+        var g = mg_add_g(svg, 'mg-missing-pane');
+
         mg_add_missing_background_rect(g, args);
         mg_missing_add_line(g, args);
         mg_missing_add_area(g, args);
@@ -4790,7 +4814,7 @@ function raw_data_transformation(args) {
         args.y_accessor = 'multiline_y_accessor';
     }
 
-    // if user supplies keyword in args.color, change to arg.colors. 
+    // if user supplies keyword in args.color, change to arg.colors.
     // this is so that the API remains fairly sensible and legible.
     if (args.color !== undefined) {
         args.colors = args.color;
@@ -4978,7 +5002,7 @@ function process_histogram(args) {
             }
         }
     }
-    
+
     // capture the original data and accessors before replacing args.data
     if (!args.processed) {
         args.processed = {};
@@ -4996,11 +5020,116 @@ function process_histogram(args) {
 
 MG.process_histogram = process_histogram;
 
+
+function process_heatmap(args) {
+    'use strict';
+    // if args.binned=False, then we need to bin the data appropriately.
+    // if args.binned=True, then we need to make sure to compute the relevant computed data.
+    // the outcome of either of these should be something in args.computed_data.
+    // the heatmap plotting function will be looking there for the data to plot.
+
+    // we need to compute an array of objects.
+    // each object has an x, y, dx, dy and z.
+
+    // heatmap data is always single dimension (no multi-series)
+    var our_data = args.data[0];
+
+    args.processed_data = our_data.map(function (d) {
+        return {
+            'x': (args.x_categorical ? d.ndx_x : d[args.x_accessor]),
+            'y': (args.y_categorical ? d.ndx_y : d[args.y_accessor]),
+            'z': d[args.z_accessor]};
+    });
+
+    var this_pt;
+
+    // we still need to compute the dx & dy components for each data point
+    for (var i = 0; i < args.processed_data.length; i++) {
+        this_pt = args.processed_data[i];
+        if (i === 0) {
+            this_pt.dx = Infinity;
+            this_pt.dy = Infinity;
+        } else {
+            this_pt.dx = args.processed_data[i - 1].dx;
+            this_pt.dy = args.processed_data[i - 1].dy;
+        }
+        var candidate;
+        for (var j = i + 1; j < args.processed_data.length; j++) {
+            if (args.processed_data[j].x > this_pt.x) {
+                candidate = args.processed_data[j].x - this_pt.x;
+                this_pt.dx = candidate < this_pt.dx ? candidate : this_pt.dx;
+            }
+            if (args.processed_data[j].y > this_pt.y) {
+                candidate = args.processed_data[j].y - this_pt.y;
+                this_pt.dy = candidate < this_pt.dy ? candidate : this_pt.dy;
+            }
+        }
+    }
+    this_pt = args.processed_data[0];
+    args.min_x = this_pt.x;
+    args.min_y = this_pt.y;
+    args.processed.min_x = this_pt.x;
+    args.processed.min_y = this_pt.y;
+    this_pt= args.processed_data[args.processed_data.length - 1];
+    args.max_x= this_pt.x+ this_pt.dx;
+    args.max_y= this_pt.y+ this_pt.dy;
+    args.processed.max_x = this_pt.x + this_pt.dx;
+    args.processed.max_y = this_pt.y + this_pt.dy;
+
+    // capture the original data and accessors before replacing args.data
+    if (!args.processed) {
+        args.processed = {};
+    }
+    args.processed.original_data = args.data;
+    args.processed.original_x_accessor = args.x_accessor;
+    args.processed.original_y_accessor = args.y_accessor;
+
+    args.data = [args.processed_data];
+    args.x_accessor = args.processed_x_accessor;
+    args.y_accessor = args.processed_y_accessor;
+
+    return this;
+}
+
+MG.process_heatmap= process_heatmap;
+
+
+function process_categorical_variables_generic(args) {
+    // For more generic use with bar charts, heatmap, point chart.
+    'use strict';
+    var our_data = args.data[0];
+    our_data.processed_data={};
+
+    if (args.x_categorical) {
+        //create first a set of all labels
+        args.label_set_X = d3.set(our_data.map(function (d) {
+            return d[args.x_accessor];
+        })).values();
+        our_data.forEach(function(d) {
+           d.ndx_x = args.label_set_X.indexOf(d[args.x_accessor]);
+        });
+    }
+
+    if (args.y_categorical) {
+        //create first a set of all labels
+        args.label_set_Y = d3.set(our_data.map(function (d) {
+            return d[args.y_accessor];
+        })).values();
+        our_data.forEach(function (d) {
+            d.ndx_y = args.label_set_Y.indexOf(d[args.y_accessor]);
+        });
+    }
+    return this;
+}
+
+MG.process_categorical_variables_generic = process_categorical_variables_generic;
+
 function process_categorical_variables(args) {
     // For use with bar charts, etc.
     'use strict';
     var extracted_data, processed_data={}, pd=[];
     var our_data = args.data[0];
+
     var label_accessor = args.bar_orientation === 'vertical' ? args.x_accessor : args.y_accessor;
     var data_accessor =  args.bar_orientation === 'vertical' ? args.y_accessor : args.x_accessor;
 

@@ -362,6 +362,7 @@ MG.data_graphic({
             <div class='row trunk-section'>
                 <div class='col-lg-7 text-center'>
                     <div class='col-lg-12 text-center' id='heat1'></div>
+                    <div class='col-lg-12 text-center' id='heat2'></div>
                 </div>
                 <div class='col-lg-5'>
 
@@ -793,11 +794,11 @@ MG.data_graphic({
 });
 
 
-var heat_data = [];
-d3.range(10).forEach(function(i) {
-    d3.range(10).forEach(function(j)
+var heat_data1 = [];
+d3.range(3).forEach(function(i) {
+    d3.range(3).forEach(function(j)
     {
-        heat_data.push({
+        heat_data1.push({
             'value_x': i,
             'value_y': j,
             'value_z': Math.random()
@@ -808,7 +809,7 @@ d3.range(10).forEach(function(i) {
 MG.data_graphic({
     title: "Heatmap 1",
     description: "Basic heatmap with binned data.",
-    data: heat_data,
+    data: heat_data1,
     chart_type: 'heatmap',
     x_accessor: 'value_x',
     y_accessor: 'value_y',
@@ -819,12 +820,42 @@ MG.data_graphic({
     bar_margin: 0,
     target: '#heat1',
     mouseover: function(d, i) {
-        console.log(d);
     d3.select('#heat1 svg .mg-active-datapoint')
         .text('Value: ' + d3.round(d.z,2));
     }
 });
 
+var heat_data2 = [];
+["A", "B", "C", "D", "E"].forEach(function (i) {
+    ["A", "B", "C", "D", "E"].forEach(function (j) {
+        heat_data2.push({
+            'value_x': i,
+            'value_y': j,
+            'value_z': Math.random()
+        });
+    });
+});
+
+MG.data_graphic({
+    title: "Heatmap 2",
+    description: "Basic heatmap with binned and categorical data.",
+    data: heat_data2,
+    chart_type: 'heatmap',
+    x_accessor: 'value_x',
+    x_categorical: true,
+    y_accessor: 'value_y',
+    y_categorical: true,
+    z_accessor: 'value_z',
+    width: 600,
+    height: 300,
+    right: 10,
+    bar_margin: 0,
+    target: '#heat2',
+    mouseover: function (d, i) {
+        d3.select('#heat2 svg .mg-active-datapoint')
+            .text('Value: ' + d3.round(d.z, 2));
+    }
+});
 var table_data = [
     { 'year': 1852, 'value1': 10.2, 'value2': 1030004.43423,'share': 0.12, 'total': 34003400, 'temp': 43, 'geo': 'United Kingdom', 'description': "Having a way of describing a row can be useful." },
     { 'year': 1901, 'value1': 10.1, 'value2': 54003.223, 'share': 0.11, 'total': 4302100, 'temp': 55, 'geo': 'United States', 'description': "More made-up numbers." },

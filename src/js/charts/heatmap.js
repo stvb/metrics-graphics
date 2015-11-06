@@ -13,18 +13,18 @@
 
             //todo: handle 3D array
             raw_data_transformation(args);
-            //process_categorical_variables(args);
             init(args);
+            process_categorical_variables_generic(args);
             process_heatmap(args);
 
             //todo: check if any of the axes is categorical
             //                x_axis_categorical(args);
-            x_axis(args);
-            y_axis(args);
+            if (args.x_categorical) x_axis_categorical(args); else x_axis(args);
+            if (args.y_categorical) y_axis_categorical(args); else y_axis(args);
 
             this.mainPlot();
             //this.markers();
-            this.rollover();
+            //this.rollover();
             this.windowListeners();
 
             return this;
@@ -54,27 +54,22 @@
 
             // move the heatmapplot after the axes so it doesn't overlap
             svg.select('.mg-y-axis').node().parentNode.appendChild(heatmapplot.node());
-            data.forEach(function(d) {
-               console.log(d.x.toFixed(0), d.y.toFixed(0),
-                   args.scales.X(d.x).toFixed(2),
-                   args.scales.Y(d.y + d.dy).toFixed(2),
-                   (args.scales.X(d.x + d.dx) - args.scales.X(d.x)).toFixed(2),
-                   (args.scales.Y(d.y - d.dy) - args.scales.Y(d.y)).toFixed(2) );
-            });
+
             heatmap_boxes
                 .attr('y', function(d) {
-                    return args.scales.Y(d.y+ d.dy);
+                    return args.scales.Y_num(d.y+ d.dy);
                 })
                 .attr('x', function (d) {
-                    return args.scales.X(d.x);
+                    return args.scales.X_num(d.x);
                 })
                 .attr('width', function (d){
-                    return args.scales.X(d.x+d.dx) - args.scales.X(d.x);
+                    return args.scales.X_num(d.x+d.dx) - args.scales.X_num(d.x);
                 })
                 .attr('height', function (d) {
-                    return args.scales.Y(d.y - d.dy) - args.scales.Y(d.y);
+                    return args.scales.Y_num(d.y - d.dy) - args.scales.Y_num(d.y);
                 })
                 .attr('fill', function (d) {
+                    //todo: get the color range from color_range or the CSS (by creating hidden element ?)
                     return d3.interpolateRgb("white", "#b6b6fc")(d.z);
                 });
                 return this;
@@ -211,23 +206,21 @@
     }
 
     var defaults = {
-        y_accessor: 'factor',
-        x_accessor: 'value',
-        baseline_accessor: null,
-        predictor_accessor: null,
-        predictor_proportion: 5,
-        dodge_accessor: null,
+        z_accessor: 'z',
+        y_accessor: 'y',
+        y_categorical: false,
+        x_accessor: 'x',
+        x_categorical: false,
         binned: true,
         padding_percentage: 0,
-        outer_padding_percentage: 0.1,
         height: 500,
-        heatmap_height: 20,
         top: 45,
         left: 70,
         truncate_x_labels: true,
         truncate_y_labels: true,
         rotate_x_labels: 0,
-        rotate_y_labels: 0
+        rotate_y_labels: 0,
+        outer_padding_percentage:0
     };
 
     MG.register('heatmap', heatmapChart, defaults);

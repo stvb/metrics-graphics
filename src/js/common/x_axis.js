@@ -79,6 +79,8 @@ function x_axis(args) {
         .domain([args.processed.min_x, args.processed.max_x])
         .range([mg_get_plot_left(args), mg_get_plot_right(args) - args.additional_buffer]);
 
+    args.scales.X_num= args.scales.X;
+
     //remove the old x-axis, add new one
     svg.selectAll('.mg-x-axis').remove();
 
@@ -110,6 +112,9 @@ function x_axis(args) {
 MG.x_axis = x_axis;
 
 function x_axis_categorical(args) {
+    var label_source = args.categorical_variables;
+    if (args.y_categorical) label_source = args.label_set_Y;
+
     var svg = mg_get_svg_child_of(args.target);
 
     var svg_width = args.width,
@@ -120,8 +125,12 @@ function x_axis_categorical(args) {
     }
 
     args.scales.X = d3.scale.ordinal()
-        .domain(args.categorical_variables.reverse())
+        .domain(label_source)
         .rangeRoundBands([args.left, mg_get_plot_right(args) - additional_buffer]);
+
+    args.scales.X_num = d3.scale.linear()
+        .domain([0, label_source.length])
+        .range([mg_get_plot_left(args), mg_get_plot_right(args) - additional_buffer]);
 
     args.scalefns.xf = function(di) {
         return args.scales.X(di[args.x_accessor]);
@@ -137,7 +146,7 @@ function x_axis_categorical(args) {
         return this;
     }
 
-    var labels = g.selectAll('text').data(args.categorical_variables).enter().append('svg:text');
+    var labels = g.selectAll('text').data(label_source).enter().append('svg:text');
 
     labels.attr('x', function(d) {
             return args.scales.X(d) + args.scales.X.rangeBand() / 2

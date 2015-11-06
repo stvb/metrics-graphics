@@ -280,7 +280,10 @@ function process_heatmap(args) {
     var our_data = args.data[0];
 
     args.processed_data = our_data.map(function (d) {
-        return {'x': d[args.x_accessor], 'y': d[args.y_accessor], 'z': d[args.z_accessor]};
+        return {
+            'x': (args.x_categorical ? d.ndx_x : d[args.x_accessor]),
+            'y': (args.y_categorical ? d.ndx_y : d[args.y_accessor]),
+            'z': d[args.z_accessor]};
     });
 
     var this_pt;
@@ -288,34 +291,35 @@ function process_heatmap(args) {
     // we still need to compute the dx & dy components for each data point
     for (var i = 0; i < args.processed_data.length; i++) {
         this_pt = args.processed_data[i];
-        if (i===0) {
+        if (i === 0) {
             this_pt.dx = Infinity;
             this_pt.dy = Infinity;
-        } else  {
+        } else {
             this_pt.dx = args.processed_data[i - 1].dx;
             this_pt.dy = args.processed_data[i - 1].dy;
         }
-        for (var j = i+1 ; j<args.processed_data.length; j++) {
-            if (args.processed_data[j].x>this_pt.x) {
-                var candidate = args.processed_data[j].x - this_pt.x;
+        var candidate;
+        for (var j = i + 1; j < args.processed_data.length; j++) {
+            if (args.processed_data[j].x > this_pt.x) {
+                candidate = args.processed_data[j].x - this_pt.x;
                 this_pt.dx = candidate < this_pt.dx ? candidate : this_pt.dx;
             }
             if (args.processed_data[j].y > this_pt.y) {
-                var candidate= args.processed_data[j].y - this_pt.y;
-                this_pt.dy = candidate<this_pt.dy ? candidate: this_pt.dy ;
+                candidate = args.processed_data[j].y - this_pt.y;
+                this_pt.dy = candidate < this_pt.dy ? candidate : this_pt.dy;
             }
         }
-        this_pt = args.processed_data[0];
-        args.min_x = this_pt.x;
-        args.min_y = this_pt.y;
-        args.processed.min_x = this_pt.x;
-        args.processed.min_y = this_pt.y;
-        this_pt= args.processed_data[args.processed_data.length - 1];
-        args.max_x= this_pt.x+ this_pt.dx;
-        args.max_y= this_pt.y+ this_pt.dy;
-        args.processed.max_x = this_pt.x + this_pt.dx;
-        args.processed.max_y = this_pt.y + this_pt.dy;
     }
+    this_pt = args.processed_data[0];
+    args.min_x = this_pt.x;
+    args.min_y = this_pt.y;
+    args.processed.min_x = this_pt.x;
+    args.processed.min_y = this_pt.y;
+    this_pt= args.processed_data[args.processed_data.length - 1];
+    args.max_x= this_pt.x+ this_pt.dx;
+    args.max_y= this_pt.y+ this_pt.dy;
+    args.processed.max_x = this_pt.x + this_pt.dx;
+    args.processed.max_y = this_pt.y + this_pt.dy;
 
     // capture the original data and accessors before replacing args.data
     if (!args.processed) {
@@ -334,11 +338,43 @@ function process_heatmap(args) {
 
 MG.process_heatmap= process_heatmap;
 
+
+function process_categorical_variables_generic(args) {
+    // For more generic use with bar charts, heatmap, point chart.
+    'use strict';
+    var our_data = args.data[0];
+    our_data.processed_data={};
+
+    if (args.x_categorical) {
+        //create first a set of all labels
+        args.label_set_X = d3.set(our_data.map(function (d) {
+            return d[args.x_accessor];
+        })).values();
+        our_data.forEach(function(d) {
+           d.ndx_x = args.label_set_X.indexOf(d[args.x_accessor]);
+        });
+    }
+
+    if (args.y_categorical) {
+        //create first a set of all labels
+        args.label_set_Y = d3.set(our_data.map(function (d) {
+            return d[args.y_accessor];
+        })).values();
+        our_data.forEach(function (d) {
+            d.ndx_y = args.label_set_Y.indexOf(d[args.y_accessor]);
+        });
+    }
+    return this;
+}
+
+MG.process_categorical_variables_generic = process_categorical_variables_generic;
+
 function process_categorical_variables(args) {
     // For use with bar charts, etc.
     'use strict';
     var extracted_data, processed_data={}, pd=[];
     var our_data = args.data[0];
+
     var label_accessor = args.bar_orientation === 'vertical' ? args.x_accessor : args.y_accessor;
     var data_accessor =  args.bar_orientation === 'vertical' ? args.y_accessor : args.x_accessor;
 

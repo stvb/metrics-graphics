@@ -78,7 +78,7 @@ function y_axis(args) {
         }
 
         //get min/max in one pass, consider baselines to be part of data
-        if (a.length > 0) { 
+        if (a.length > 0) {
             if (args.baselines) {
                 a = a.concat(args.baselines);
             }
@@ -166,6 +166,7 @@ function y_axis(args) {
             .domain([min_y, max_y])
             .range([mg_get_plot_bottom(args), args.top]);
     }
+    args.scales.Y_num = args.scales.Y;
 
     //used for ticks and such, and designed to be paired with log or linear
     args.scales.Y_axis = d3.scale.linear()
@@ -334,10 +335,18 @@ function y_axis(args) {
 MG.y_axis = y_axis;
 
 function y_axis_categorical(args) {
+    //for backwards compatibility...
+    var label_source = args.categorical_variables;
+    if (args.y_categorical) label_source = args.label_set_Y;
+
     // first, come up with y_axis
     args.scales.Y = d3.scale.ordinal()
-        .domain(args.categorical_variables)
+        .domain(label_source)
         .rangeRoundBands([mg_get_plot_bottom(args), args.top], args.padding_percentage, args.outer_padding_percentage);
+
+    args.scales.Y_num = d3.scale.linear()
+        .domain([0, label_source.length])
+        .range([mg_get_plot_bottom(args)-10, args.top]);
 
     args.scalefns.yf = function(di) {
         return args.scales.Y(di[args.y_accessor]);
@@ -355,7 +364,8 @@ function y_axis_categorical(args) {
         return this;
     }
 
-    var labels = g.selectAll('text').data(args.categorical_variables).enter().append('svg:text')
+
+    var labels = g.selectAll('text').data(label_source).enter().append('svg:text')
         .attr('x', args.left)
         .attr('y', function(d) {
             return args.scales.Y(d) + args.scales.Y.rangeBand() / 2
