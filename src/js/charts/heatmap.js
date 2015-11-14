@@ -24,7 +24,7 @@
 
             this.mainPlot();
             //this.markers();
-            //this.rollover();
+            this.rollover();
             this.windowListeners();
 
             return this;
@@ -70,7 +70,7 @@
                 })
                 .attr('fill', function (d) {
                     //todo: get the color range from color_range or the CSS (by creating hidden element ?)
-                    return d3.interpolateRgb("white", "#b6b6fc")(d.z);
+                    return d3.interpolateRgb("white", "#b6b6fc")( (d.z - args.min_z) / (args.max_z - args.min_z) );
                 });
                 return this;
         };
@@ -132,7 +132,6 @@
             var label_accessor = this.is_vertical ? args.x_accessor : args.y_accessor;
             var data_accessor = this.is_vertical ? args.y_accessor : args.x_accessor;
             var label_units = this.is_vertical ? args.yax_units : args.xax_units;
-
             return function (d, i) {
                 svg.selectAll('text')
                     .filter(function (g, j) {

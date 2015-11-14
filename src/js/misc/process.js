@@ -287,10 +287,13 @@ function process_heatmap(args) {
     });
 
     var this_pt;
-
+    var min_z= args.processed_data[0].z;
+    var max_z= args.processed_data[0].z;
     // we still need to compute the dx & dy components for each data point
     for (var i = 0; i < args.processed_data.length; i++) {
         this_pt = args.processed_data[i];
+        min_z = Math.min(this_pt.z, min_z);
+        max_z = Math.max(this_pt.z, max_z);
         if (i === 0) {
             this_pt.dx = Infinity;
             this_pt.dy = Infinity;
@@ -310,11 +313,15 @@ function process_heatmap(args) {
             }
         }
     }
+
+    args.min_z=args.min_z || min_z;
+    args.max_z=args.max_z || max_z;
     this_pt = args.processed_data[0];
     args.min_x = this_pt.x;
     args.min_y = this_pt.y;
     args.processed.min_x = this_pt.x;
     args.processed.min_y = this_pt.y;
+
     this_pt= args.processed_data[args.processed_data.length - 1];
     args.max_x= this_pt.x+ this_pt.dx;
     args.max_y= this_pt.y+ this_pt.dy;

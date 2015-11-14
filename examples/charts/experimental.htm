@@ -820,7 +820,7 @@ MG.data_graphic({
     bar_margin: 0,
     target: '#heat1',
     mouseover: function(d, i) {
-    d3.select('#heat1 svg .mg-active-datapoint')
+        d3.select('#heat1 svg .mg-active-datapoint')
         .text('Value: ' + d3.round(d.z,2));
     }
 });
