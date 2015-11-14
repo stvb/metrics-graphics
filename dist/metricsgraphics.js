@@ -1425,7 +1425,7 @@ MG.x_axis = x_axis;
 
 function x_axis_categorical(args) {
     var label_source = args.categorical_variables;
-    if (args.y_categorical) label_source = args.label_set_Y;
+    if (args.x_categorical) label_source = args.label_set_X;
 
     var svg = mg_get_svg_child_of(args.target);
 
@@ -4711,16 +4711,16 @@ MG.data_table = function(args) {
 
             heatmap
                 .attr('y', function (d) {
-                    return args.scales.Y(d.y + d.dy);
+                    return args.scales.Y_num(d.y + d.dy);
                 })
                 .attr('x', function (d) {
-                    return args.scales.X(d.x);
+                    return args.scales.X_num(d.x);
                 })
                 .attr('width', function (d) {
-                    return args.scales.X(d.x + d.dx) - args.scales.X(d.x);
+                    return args.scales.X_num(d.x + d.dx) - args.scales.X_num(d.x);
                 })
                 .attr('height', function (d) {
-                    return args.scales.Y(d.y - d.dy) - args.scales.Y(d.y);
+                    return args.scales.Y_num(d.y - d.dy) - args.scales.Y_num(d.y);
                 })
                 .attr('opacity', 0)
                 .on('mouseover', this.rolloverOn(args))

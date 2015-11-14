@@ -113,7 +113,7 @@ MG.x_axis = x_axis;
 
 function x_axis_categorical(args) {
     var label_source = args.categorical_variables;
-    if (args.y_categorical) label_source = args.label_set_Y;
+    if (args.x_categorical) label_source = args.label_set_X;
 
     var svg = mg_get_svg_child_of(args.target);
 

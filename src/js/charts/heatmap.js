@@ -108,16 +108,16 @@
 
             heatmap
                 .attr('y', function (d) {
-                    return args.scales.Y(d.y + d.dy);
+                    return args.scales.Y_num(d.y + d.dy);
                 })
                 .attr('x', function (d) {
-                    return args.scales.X(d.x);
+                    return args.scales.X_num(d.x);
                 })
                 .attr('width', function (d) {
-                    return args.scales.X(d.x + d.dx) - args.scales.X(d.x);
+                    return args.scales.X_num(d.x + d.dx) - args.scales.X_num(d.x);
                 })
                 .attr('height', function (d) {
-                    return args.scales.Y(d.y - d.dy) - args.scales.Y(d.y);
+                    return args.scales.Y_num(d.y - d.dy) - args.scales.Y_num(d.y);
                 })
                 .attr('opacity', 0)
                 .on('mouseover', this.rolloverOn(args))
