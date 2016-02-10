@@ -152,7 +152,7 @@ function x_axis_categorical(args) {
             return args.scales.X(d) + args.scales.X.rangeBand() / 2
                 + (args.buffer) * args.outer_padding_percentage + (additional_buffer / 2);
         })
-        .attr('y', mg_get_plot_bottom(args))
+        .attr('y', mg_get_plot_bottom(args)+15)
         .attr('dy', '.35em')
         .attr('text-anchor', 'middle')
         .text(String);

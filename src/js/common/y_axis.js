@@ -102,7 +102,6 @@ function y_axis(args) {
     if (min_y >= 0 && !args.min_y && !args.min_y_from_data) {
         min_y = 0;
     }
-
     if (args.chart_type === 'bar') {
         min_y = 0;
         max_y = d3.max(args.data[0], function(d) {
@@ -342,11 +341,10 @@ function y_axis_categorical(args) {
     // first, come up with y_axis
     args.scales.Y = d3.scale.ordinal()
         .domain(label_source)
-        .rangeRoundBands([mg_get_plot_bottom(args), args.top], args.padding_percentage, args.outer_padding_percentage);
-
+        .rangeRoundBands([mg_get_plot_bottom(args)-10, args.top], args.padding_percentage, args.outer_padding_percentage);
     args.scales.Y_num = d3.scale.linear()
         .domain([0, label_source.length])
-        .range([mg_get_plot_bottom(args)-10, args.top]);
+        .range([mg_get_plot_bottom(args) - 10, args.top], args.padding_percentage, args.outer_padding_percentage);
 
     args.scalefns.yf = function(di) {
         return args.scales.Y(di[args.y_accessor]);
@@ -363,7 +361,6 @@ function y_axis_categorical(args) {
     if (!args.y_axis) {
         return this;
     }
-
 
     var labels = g.selectAll('text').data(label_source).enter().append('svg:text')
         .attr('x', args.left)

@@ -68,6 +68,12 @@
                 .attr('height', function (d) {
                     return args.scales.Y_num(d.y - d.dy) - args.scales.Y_num(d.y);
                 })
+                .attr('stroke', function (d) {
+                    return "#eeeeee";
+                })
+                .attr('stroke-width', function (d) {
+                    return 1;
+                })
                 .attr('fill', function (d) {
                     //todo: get the color range from color_range or the CSS (by creating hidden element ?)
                     return d3.interpolateRgb("white", "#b6b6fc")( (d.z - args.min_z) / (args.max_z - args.min_z) );

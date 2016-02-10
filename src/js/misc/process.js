@@ -318,7 +318,7 @@ function process_heatmap(args) {
     args.max_z=args.max_z || max_z;
     this_pt = args.processed_data[0];
     args.min_x = this_pt.x;
-    args.min_y = this_pt.y;
+    args.min_y = args.y_categorical ? -1.5 : this_pt.y;
     args.processed.min_x = this_pt.x;
     args.processed.min_y = this_pt.y;
 

@@ -1022,7 +1022,6 @@ function y_axis(args) {
     if (min_y >= 0 && !args.min_y && !args.min_y_from_data) {
         min_y = 0;
     }
-
     if (args.chart_type === 'bar') {
         min_y = 0;
         max_y = d3.max(args.data[0], function(d) {
@@ -1262,11 +1261,10 @@ function y_axis_categorical(args) {
     // first, come up with y_axis
     args.scales.Y = d3.scale.ordinal()
         .domain(label_source)
-        .rangeRoundBands([mg_get_plot_bottom(args), args.top], args.padding_percentage, args.outer_padding_percentage);
-
+        .rangeRoundBands([mg_get_plot_bottom(args)-10, args.top], args.padding_percentage, args.outer_padding_percentage);
     args.scales.Y_num = d3.scale.linear()
         .domain([0, label_source.length])
-        .range([mg_get_plot_bottom(args)-10, args.top]);
+        .range([mg_get_plot_bottom(args) - 10, args.top], args.padding_percentage, args.outer_padding_percentage);
 
     args.scalefns.yf = function(di) {
         return args.scales.Y(di[args.y_accessor]);
@@ -1283,7 +1281,6 @@ function y_axis_categorical(args) {
     if (!args.y_axis) {
         return this;
     }
-
 
     var labels = g.selectAll('text').data(label_source).enter().append('svg:text')
         .attr('x', args.left)
@@ -1464,7 +1461,7 @@ function x_axis_categorical(args) {
             return args.scales.X(d) + args.scales.X.rangeBand() / 2
                 + (args.buffer) * args.outer_padding_percentage + (additional_buffer / 2);
         })
-        .attr('y', mg_get_plot_bottom(args))
+        .attr('y', mg_get_plot_bottom(args)+15)
         .attr('dy', '.35em')
         .attr('text-anchor', 'middle')
         .text(String);
@@ -4671,6 +4668,12 @@ MG.data_table = function(args) {
                 .attr('height', function (d) {
                     return args.scales.Y_num(d.y - d.dy) - args.scales.Y_num(d.y);
                 })
+                .attr('stroke', function (d) {
+                    return "#eeeeee";
+                })
+                .attr('stroke-width', function (d) {
+                    return 1;
+                })
                 .attr('fill', function (d) {
                     //todo: get the color range from color_range or the CSS (by creating hidden element ?)
                     return d3.interpolateRgb("white", "#b6b6fc")( (d.z - args.min_z) / (args.max_z - args.min_z) );
@@ -5301,7 +5304,7 @@ function process_heatmap(args) {
     args.max_z=args.max_z || max_z;
     this_pt = args.processed_data[0];
     args.min_x = this_pt.x;
-    args.min_y = this_pt.y;
+    args.min_y = args.y_categorical ? -1.5 : this_pt.y;
     args.processed.min_x = this_pt.x;
     args.processed.min_y = this_pt.y;
 

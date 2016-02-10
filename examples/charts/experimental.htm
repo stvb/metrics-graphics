@@ -795,8 +795,8 @@ MG.data_graphic({
 
 
 var heat_data1 = [];
-d3.range(3).forEach(function(i) {
-    d3.range(3).forEach(function(j)
+d3.range(10).forEach(function(i) {
+    d3.range(10).forEach(function(j)
     {
         heat_data1.push({
             'value_x': i,
@@ -826,8 +826,8 @@ MG.data_graphic({
 });
 
 var heat_data2 = [];
-["A", "B", "C", "D", "E"].forEach(function (i) {
-    ["A", "B", "C", "D", "E"].forEach(function (j) {
+["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"].forEach(function (i) {
+    d3.range(10).forEach(function (j) {
         heat_data2.push({
             'value_x': i,
             'value_y': j,
@@ -844,7 +844,7 @@ MG.data_graphic({
     x_accessor: 'value_x',
     x_categorical: true,
     y_accessor: 'value_y',
-    y_categorical: true,
+    y_categorical: false,
     z_accessor: 'value_z',
     width: 600,
     height: 300,
@@ -856,6 +856,11 @@ MG.data_graphic({
             .text('Value: ' + d3.round(d.z, 2));
     }
 });
+
+
+
+
+
 var table_data = [
     { 'year': 1852, 'value1': 10.2, 'value2': 1030004.43423,'share': 0.12, 'total': 34003400, 'temp': 43, 'geo': 'United Kingdom', 'description': "Having a way of describing a row can be useful." },
     { 'year': 1901, 'value1': 10.1, 'value2': 54003.223, 'share': 0.11, 'total': 4302100, 'temp': 55, 'geo': 'United States', 'description': "More made-up numbers." },
